@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caída Libre Tracker Pro</title>
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js for beautiful graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="blob-bg"></div>
+    <div class="blob-bg blob-2"></div>
+
+    <main class="container">
+        <header class="header">
+            <h1 class="gradient-text">Caída Libre Tracker</h1>
+            <p>Análisis cinemático de alta precisión</p>
+        </header>
+
+        <div class="stepper">
+            <div class="step active" id="indicator-1">1. Video</div>
+            <div class="step" id="indicator-2">2. Calibración</div>
+            <div class="step" id="indicator-3">3. Procesamiento</div>
+            <div class="step" id="indicator-4">4. Resultados</div>
+        </div>
+
+        <section class="card active" id="step-1">
+            <h2>Subir Video</h2>
+            <p class="subtitle">Selecciona el video para analizar la caída libre.</p>
+            <div class="upload-zone" id="upload-zone">
+                <input type="file" id="video-input" accept="video/*" class="hidden">
+                <div class="upload-content">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                    </svg>
+                    <p>Arrastra tu video aquí o <span>haz clic para examinar</span></p>
+                </div>
+            </div>
+            <div class="loader-container hidden" id="upload-loader">
+                <div class="spinner"></div>
+                <p>Cargando video...</p>
+            </div>
+        </section>
+
+        <section class="card hidden" id="step-2">
+            <h2>Calibración Espacial</h2>
+            <p class="subtitle">Haz clic en dos puntos del frame para establecer una referencia de medida.</p>
+
+            <div class="canvas-container">
+                <canvas id="calibration-canvas"></canvas>
+            </div>
+
+            <div class="controls-row">
+                <div class="input-group">
+                    <label>Distancia real entre puntos (metros)</label>
+                    <input type="number" id="real-distance" placeholder="1.0" step="0.01">
+                </div>
+                <button class="btn btn-primary" id="btn-next-step2" disabled>Continuar a Sintonización</button>
+            </div>
+        </section>
+
+        <section class="card hidden" id="step-3">
+            <h2>Sintonización de Color (HSV)</h2>
+            <p class="subtitle">Ajusta los controles hasta que la pelota se vea BLANCA y el fondo NEGRO.</p>
+
+            <div class="tuning-container">
+                <div class="sliders-panel">
+                    <div class="slider-group">
+                        <label>Hue Min</label>
+                        <div class="slider-row">
+                            <input type="range" id="l_h" min="0" max="179" value="0">
+                            <input type="number" class="slider-num" id="num-l_h" min="0" max="179" value="0">
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <label>Hue Max</label>
+                        <div class="slider-row">
+                            <input type="range" id="u_h" min="0" max="179" value="179">
+                            <input type="number" class="slider-num" id="num-u_h" min="0" max="179" value="179">
+                        </div>
+                    </div>
+
+                    <div class="slider-group">
+                        <label>Sat Min</label>
+                        <div class="slider-row">
+                            <input type="range" id="l_s" min="0" max="255" value="0">
+                            <input type="number" class="slider-num" id="num-l_s" min="0" max="255" value="0">
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <label>Sat Max</label>
+                        <div class="slider-row">
+                            <input type="range" id="u_s" min="0" max="255" value="255">
+                            <input type="number" class="slider-num" id="num-u_s" min="0" max="255" value="255">
+                        </div>
+                    </div>
+
+                    <div class="slider-group">
+                        <label>Val Min</label>
+                        <div class="slider-row">
+                            <input type="range" id="l_v" min="0" max="255" value="0">
+                            <input type="number" class="slider-num" id="num-l_v" min="0" max="255" value="0">
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <label>Val Max</label>
+                        <div class="slider-row">
+                            <input type="range" id="u_v" min="0" max="255" value="255">
+                            <input type="number" class="slider-num" id="num-u_v" min="0" max="255" value="255">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary mt-4 w-full pulse-btn" id="btn-analyze">
+                        ▶ Iniciar Análisis Automático
+                    </button>
+                </div>
+
+                <div class="preview-panel">
+                    <img id="filtered-stream" alt="HSV Preview">
+                </div>
+            </div>
+        </section>
+
+        <!-- Overlay for full-page processing state -->
+        <div class="processing-overlay hidden" id="processing-overlay">
+            <div class="loader-container">
+                <div class="spinner lg"></div>
+                <h3 class="gradient-text">Procesando fotogramas...</h3>
+                <p>Aplicando algoritmos de visión por computadora para trackear la caída.</p>
+            </div>
+        </div>
+
+        <section class="card hidden" id="step-4">
+            <h2>Resultados del Tracking</h2>
+            <p class="subtitle">Gráfica de Posición vs Tiempo de la caída libre.</p>
+
+            <div class="results-grid">
+                <div class="chart-container">
+                    <canvas id="results-chart"></canvas>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table" id="results-table">
+                        <thead>
+                            <tr>
+                                <th>Frame</th>
+                                <th>Tiempo (s)</th>
+                                <th>Posición Y (m)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Datos insertados por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Curve Fit Results -->
+            <div class="fit-section hidden" id="fit-section">
+                <h3 class="gradient-text mt-4">Ajuste</h3>
+                <p class="subtitle">Modelo: y(t) = y₀ + v₀·t − (g/2)·t²</p>
+
+                <div class="fit-params-grid">
+                    <div class="fit-card">
+                        <span class="fit-label">y₀</span>
+                        <span class="fit-value" id="fit-y0">—</span>
+                        <span class="fit-error" id="fit-sigma-y0">σ = —</span>
+                    </div>
+                    <div class="fit-card">
+                        <span class="fit-label">v₀</span>
+                        <span class="fit-value" id="fit-v0">—</span>
+                        <span class="fit-error" id="fit-sigma-v0">σ = —</span>
+                    </div>
+                    <div class="fit-card accent">
+                        <span class="fit-label">g</span>
+                        <span class="fit-value" id="fit-g">—</span>
+                        <span class="fit-error" id="fit-sigma-g">σ = —</span>
+                    </div>
+                </div>
+
+                <div class="fit-formula-box" id="fit-formula">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="chart-container mt-4">
+                    <canvas id="fit-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="actions-row mt-4">
+                <button class="btn btn-secondary" id="btn-restart">Analizar Nuevo Video</button>
+                <button class="btn btn-primary" id="btn-export-csv">Exportar a CSV</button>
+            </div>
+        </section>
+
+    </main>
+    <script src="script.js"></script>
+</body>
+
+</html>
